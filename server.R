@@ -13,24 +13,25 @@ get_table <- function(dbName, tableName) {
     query <- sprintf('SELECT * FROM %s', tableName)
     data <- data <- dbGetQuery(db, query)
     dbDisconnect(db)
-    data.table(data)
+    data.table(data, key = 'word')
 }
 
 predict_next <- function(line, unigram, bigram, trigram, defaultAnswer) {
     line <- paste('. .', line) # make sure line has at least three "words"
     wrds <- tail(unlist(strsplit(line, ' ')), n = 3)
-    prediction <- c(trigram$pred[trigram$word == paste(wrds, collapse = ' ')],
+    prediction <- c(trigram[J(paste(wrds, collapse = ' '))]$pred,
                     #backoff if trigram didn't appear
-                    bigram$pred[bigram$word == paste(wrds[2:3], collapse = ' ')],
-                    unigram$pred[unigram$word == wrds[3]],
+                    bigram[J(paste(wrds[2:3], collapse = ' '))]$pred,
+                    unigram[J(wrds[3])]$pred,
                     #skip-ahead if last word doesn't appear
-                    bigram$skip[bigram$word == paste(wrds[1:2], collapse = ' ')],
-                    unigram$skip[unigram$word == wrds[2]],
-                    unigram$skip2[unigram$word == wrds[1]],
+                    bigram[J(paste(wrds[1:2], collapse = ' '))]$skip,
+                    unigram[J(wrds[2])]$skip,
+                    unigram[J(wrds[1])]$skip2,
                     # if nothing shows up, use the default
                     defaultAnswer)
     # The first thing that showed up is the best prediction
-    prediction[1]
+    firstNonNA <-min(which(!is.na(prediction)))  
+    prediction[firstNonNA]
 }
 
 shinyServer(
@@ -46,7 +47,11 @@ shinyServer(
             isolate({
                 line <- gsub("[[:punct:]]", "", input$txt)
                 if (line == '') {defaultStart}
-                else {predict_next(line, unigram, bigram, trigram, defaultCont)}
+                else {predict_next(tolower(line),
+                                   unigram,
+                                   bigram,
+                                   trigram,
+                                   defaultCont)}
             })
         })
     }
