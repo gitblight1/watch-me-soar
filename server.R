@@ -4,9 +4,9 @@ require(data.table)
 
 sqlite_db <- 'ngrams.db'
 
-uniTable <- 'Single'
-biTable <- 'Double'
-triTable <- 'Triple'
+uniTable <- 'Ngram1'
+biTable <- 'Ngram2'
+triTable <- 'Ngram3'
 
 get_table <- function(dbName, tableName) {
     db <- dbConnect(SQLite(), dbName)
