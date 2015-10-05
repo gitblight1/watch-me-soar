@@ -12,7 +12,7 @@ shinyUI(
     # Output section
     mainPanel(
        h3('Results'),
-       uiOutput("result") # output is dynamically rendered in server.R
+       uiOutput('result') # output is dynamically rendered in server.R
     )
   )
 )
